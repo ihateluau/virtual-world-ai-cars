@@ -40,7 +40,7 @@ class World {
     #generateTrees() {
         const points = [
             ...this.roadBorders.map((s) => [s.point1, s.point2]).flat(), // convert it into 1 single array of points
-            ...this.buildings.map((b) => b.points).flat()
+            ...this.buildings.map((b) => b.base.points).flat()
         ];
 
         const left = Math.min(...points.map((p) => p.x)); 
@@ -51,7 +51,7 @@ class World {
 
         // checking where trees should not spawn and stop them from doing so
         const illegalPolys = [
-            ...this.buildings,
+            ...this.buildings.map((b) => b.base),
             ...this.envelopes.map((e) => e.poly)
         ];
 
@@ -77,7 +77,7 @@ class World {
             // check if tree is too close to other trees
             if (keep) {
                 for (const tree of trees) {
-                    if (distance(tree, point) < this.treeSize) {
+                    if (distance(tree.center, point) < this.treeSize) {
                         keep = false;
                         break;
                     }
@@ -98,7 +98,7 @@ class World {
             }
 
             if (keep) {
-                trees.push(point);
+                trees.push(new Tree(point, this.treeSize));
                 tryCount = 0;
             }
             tryCount++;
@@ -170,10 +170,10 @@ class World {
             }
         }
 
-        return bases;
+        return bases.map((b) => new Building(b));
     }
 
-    draw(context) {
+    draw(context, viewPoint) {
         for (const envelope of this.envelopes) {
             envelope.draw(context, {fill: "#BBB", stroke: "#BBB", lineWidth: 15});
         }
@@ -186,12 +186,16 @@ class World {
             segment.draw(context, {colour: "white", width: 4});
         }
 
-        for (const tree of this.trees) {
-            tree.draw(context, {size: this.treeSize, colour: "rgba(0, 0, 0, 0.5)"});
+        const items = [...this.buildings, ...this.trees];
+        items.sort( // trees shouldn't overlap buildings, buildings shouldn't overlap trees
+            (a, b) => 
+                a.base.distanceToPoint(viewPoint) - 
+                a.base.distanceToPoint(viewPoint)
+        )
+        
+        for (const item of this.items) {
+            item.draw(context, viewPoint);
         }
 
-        for (const building of this.buildings) {
-            building.draw(context);
-        }
     }
 }
