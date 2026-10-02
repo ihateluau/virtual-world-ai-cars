@@ -22,6 +22,8 @@
         <script src="js/primitives/segment.js"></script>
         <script src="js/primitives/polygon.js"></script>
         <script src="js/primitives/envelope.js"></script>
+        <script src="js/items/tree.js"></script>
+        <script src="js/items/building.js"></script>
         <script>
             
             myCanvas.width = 600;
@@ -51,7 +53,9 @@
                     world.generate();
                     oldGraphHash = graph.hash(); // generate a new hash for the graph
                 }
-                world.draw(context);
+                // get the viewpoint
+                const viewPoint = scale(viewport.getOffset(), -1)
+                world.draw(context, viewPoint);
                 context.globalAlpha = 0.3
                 graphEditor.display();
                 requestAnimationFrame(animate); // recursion, re-call the function each frame
