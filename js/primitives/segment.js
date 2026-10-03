@@ -1,58 +1,60 @@
 class Segment {
-    constructor(point1, point2) {
-        this.point1 = point1;
-        this.point2 = point2;
-    }
+   constructor(p1, p2, oneWay = false) {
+      this.p1 = p1;
+      this.p2 = p2;
+      this.oneWay = oneWay;
+   }
 
-    length() {
-        return distance(this.point1, this.point2);
-    }
+   length() {
+      return distance(this.p1, this.p2);
+   }
 
-    directionVector() {
-        return normalize(subtract(this.point2, this.point1));
-    }
+   directionVector() {
+      return normalize(subtract(this.p2, this.p1));
+   }
 
-    equals(segment) {
-        return this.includes(segment.point1) && this.includes(segment.point2);
-    }
+   equals(seg) {
+      return this.includes(seg.p1) && this.includes(seg.p2);
+   }
 
-    includes(point) { // helper func for equals
-        return this.point1.equals(point) || this.point2.equals(point);
-    }
+   includes(point) {
+      return this.p1.equals(point) || this.p2.equals(point);
+   }
 
-    distanceToPoint(point) {
-        const proj = this.projectPoint(point);
-        if (proj.offset > 0 && proj.offset < 1) {
-            return distance(point, proj.point);
-        }
+   distanceToPoint(point) {
+      const proj = this.projectPoint(point);
+      if (proj.offset > 0 && proj.offset < 1) {
+         return distance(point, proj.point);
+      }
+      const distToP1 = distance(point, this.p1);
+      const distToP2 = distance(point, this.p2);
+      return Math.min(distToP1, distToP2);
+   }
 
-        const distToP1 = distance(point, this.point1);
-        const distToP2 = distance(point, this.point2);
+   projectPoint(point) {
+      const a = subtract(point, this.p1);
+      const b = subtract(this.p2, this.p1);
+      const normB = normalize(b);
+      const scaler = dot(a, normB);
+      const proj = {
+         point: add(this.p1, scale(normB, scaler)),
+         offset: scaler / magnitude(b),
+      };
+      return proj;
+   }
 
-        return Math.min(distToP1, distToP2);
-    }
-
-    projectPoint(point) {
-        const a = subtract(point, this.point1);
-        const b = subtract(this.point2, this.point1);
-
-        const normB = normalize(b);
-        const scaler = dot(a, normB);
-
-        return {
-            point: add(this.point1, scale(normB, scaler)),
-            offset: scaler / magnitude(b),
-        };
-    }
-
-    draw(context, {width = 2, colour = "black", dash = [] } = {}) {
-        context.beginPath();
-        context.lineWidth = width;
-        context.strokeStyle = colour;
-        context.setLineDash(dash);
-        context.moveTo(this.point1.x, this.point1.y);
-        context.lineTo(this.point2.x, this.point2.y);
-        context.stroke();
-        context.setLineDash([]);
-    }
+   draw(ctx, { width = 2, color = "black", dash = [], cap = "butt" } = {}) {
+      ctx.beginPath();
+      ctx.lineWidth = width;
+      ctx.strokeStyle = color;
+      ctx.lineCap = cap;
+      if (this.oneWay) {
+         dash = [4, 4];
+      }
+      ctx.setLineDash(dash);
+      ctx.moveTo(this.p1.x, this.p1.y);
+      ctx.lineTo(this.p2.x, this.p2.y);
+      ctx.stroke();
+      ctx.setLineDash([]);
+   }
 }
